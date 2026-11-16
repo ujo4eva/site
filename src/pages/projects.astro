@@ -9,42 +9,113 @@ const sorted = projects.sort(
     Number(b.data.featured) - Number(a.data.featured) ||
     b.data.date.valueOf() - a.data.date.valueOf(),
 );
+
+const contributions = (await getCollection('contributions')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+
+const ext = { target: '_blank', rel: 'noopener noreferrer' };
+const linkClass = 'text-zinc-500 transition-colors hover:text-zinc-100';
 ---
 
-<Layout title="Projects — ujo4eva" description="Open-source projects from Osadebamwen Uwadiae.">
+<Layout title="Projects — ujo4eva" description="Projects and open-source contributions from Osadebamwen Uwadiae.">
   <PageHeader title="projects" blurb="things i've built." />
 
   {sorted.length === 0 && <p class="text-zinc-500">No projects yet. Check back soon.</p>}
 
   <ol class="border-t border-zinc-900">
     {
-      sorted.map((project, i) => (
-        <li class="border-b border-zinc-900">
-          <a
-            href={project.data.repo}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="group grid grid-cols-[2.5rem_1fr_auto] items-baseline gap-x-4 py-4"
-          >
+      sorted.map((project, i) => {
+        const { title, url, repo, description, tags, featured } = project.data;
+        const primary = url ?? repo;
+        return (
+          <li class="group grid grid-cols-[2.5rem_1fr] items-baseline gap-x-4 border-b border-zinc-900 py-4 sm:grid-cols-[2.5rem_1fr_auto]">
             <span class="font-mono text-sm text-zinc-600 transition-colors group-hover:text-accent">
               {String(i + 1).padStart(2, '0')}
             </span>
-            <span class="min-w-0">
-              <span class="font-medium text-zinc-100">{project.data.title}</span>
-              {project.data.featured && <span class="ml-2 font-mono text-xs text-accent">featured</span>}
-              <span class="mt-1 block text-sm leading-relaxed text-zinc-500">{project.data.description}</span>
-              {project.data.tags.length > 0 && (
-                <span class="mt-2 block font-mono text-xs text-zinc-600">
-                  {project.data.tags.map((tag) => tag.toLowerCase()).join(' · ')}
-                </span>
+
+            <div class="min-w-0">
+              {primary ? (
+                <a href={primary} {...ext} class="font-medium text-zinc-100 underline-offset-4 hover:underline">
+                  {title}
+                </a>
+              ) : (
+                <span class="font-medium text-zinc-100">{title}</span>
               )}
-            </span>
-            <span class="font-mono text-sm text-zinc-600 transition-colors group-hover:text-zinc-100" aria-hidden="true">
-              ↗
-            </span>
-          </a>
-        </li>
-      ))
+              {featured && <span class="ml-2 font-mono text-xs text-accent">featured</span>}
+              <p class="mt-1 text-sm leading-relaxed text-zinc-500">{description}</p>
+              {tags.length > 0 && (
+                <p class="mt-2 font-mono text-xs text-zinc-600">
+                  {tags.map((tag) => tag.toLowerCase()).join(' · ')}
+                </p>
+              )}
+            </div>
+
+            <div class="col-start-2 mt-2 flex gap-3 font-mono text-sm sm:col-start-3 sm:row-start-1 sm:mt-0">
+              {url && (
+                <a href={url} {...ext} class={linkClass} aria-label={`${title} site`}>
+                  site ↗
+                </a>
+              )}
+              {repo && (
+                <a href={repo} {...ext} class={linkClass} aria-label={`${title} source code`}>
+                  code ↗
+                </a>
+              )}
+              {!repo && <span class="text-zinc-700">private</span>}
+            </div>
+          </li>
+        );
+      })
     }
   </ol>
+
+  {
+    contributions.length > 0 && (
+      <section class="mt-20">
+        <h2 class="text-xl font-semibold tracking-tight text-zinc-100">contributions</h2>
+        <p class="mt-1 mb-8 text-zinc-500">merged into other people's projects.</p>
+
+        <ul class="border-t border-zinc-900">
+          {contributions.map(({ data }) => (
+            <li class="grid grid-cols-[2.5rem_1fr] gap-x-4 border-b border-zinc-900 py-4">
+              <span class="font-mono text-sm text-zinc-600">↳</span>
+              <div class="min-w-0">
+                <a
+                  href={`https://github.com/${data.repo}`}
+                  {...ext}
+                  class="font-mono text-sm text-zinc-100 underline-offset-4 hover:underline"
+                >
+                  {data.repo}
+                </a>
+                <p class="mt-1 text-sm leading-relaxed text-zinc-500">{data.summary}</p>
+
+                {data.prs.length === 1 ? (
+                  <a href={data.prs[0].url} {...ext} class:list={['mt-2 inline-block font-mono text-xs', linkClass]}>
+                    1 merged pr ↗
+                  </a>
+                ) : (
+                  <details class="group/prs mt-2">
+                    <summary class:list={['cursor-pointer list-none font-mono text-xs [&::-webkit-details-marker]:hidden', linkClass]}>
+                      {data.prs.length} merged prs
+                      <span class="ml-0.5 inline-block transition-transform group-open/prs:rotate-90">›</span>
+                    </summary>
+                    <ul class="mt-2 space-y-1 border-l border-zinc-900 pl-3">
+                      {data.prs.map((pr) => (
+                        <li>
+                          <a href={pr.url} {...ext} class:list={['text-xs', linkClass]}>
+                            {pr.title} ↗
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
 </Layout>

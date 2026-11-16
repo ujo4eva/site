@@ -1,5 +1,5 @@
 import { defineCollection, z } from 'astro:content';
-import { glob } from 'astro/loaders';
+import { file, glob } from 'astro/loaders';
 
 const blog = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/blog' }),
@@ -41,11 +41,25 @@ const projects = defineCollection({
   schema: z.object({
     title: z.string(),
     date: z.date(),
-    repo: z.string().url(),
+    /** Source code. Leave out for private projects. */
+    repo: z.string().url().optional(),
+    /** Live site or app, if there is one. */
+    url: z.string().url().optional(),
     description: z.string(),
     tags: z.array(z.string()).default([]),
     featured: z.boolean().optional().default(false),
   }),
 });
 
-export const collections = { blog, mixes, videos, projects };
+// Work merged into other people's projects. One entry per upstream repo.
+const contributions = defineCollection({
+  loader: file('./src/content/contributions.json'),
+  schema: z.object({
+    repo: z.string(),
+    summary: z.string(),
+    date: z.coerce.date(),
+    prs: z.array(z.object({ title: z.string(), url: z.string().url() })).min(1),
+  }),
+});
+
+export const collections = { blog, mixes, videos, projects, contributions };

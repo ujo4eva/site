@@ -1,0 +1,34 @@
+[
+  {
+    "id": "omafeed",
+    "repo": "pch/omafeed",
+    "summary": "Miniflux sync for the Omarchy RSS reader: an API client, mirroring an account, connecting and editing feeds from the window, OPML import while connected, and fetching full articles.",
+    "date": "2026-11-13",
+    "prs": [
+      { "title": "Add a client for Miniflux's REST API", "url": "https://github.com/pch/omafeed/pull/50" },
+      { "title": "Mirror a Miniflux account", "url": "https://github.com/pch/omafeed/pull/51" },
+      { "title": "Connect a Miniflux account from the window", "url": "https://github.com/pch/omafeed/pull/52" },
+      { "title": "Edit a Miniflux account's feeds and categories", "url": "https://github.com/pch/omafeed/pull/53" },
+      { "title": "Import OPML while a Miniflux account is connected", "url": "https://github.com/pch/omafeed/pull/54" },
+      { "title": "Fetch the full article from its web page", "url": "https://github.com/pch/omafeed/pull/55" }
+    ]
+  },
+  {
+    "id": "preamp",
+    "repo": "bjarneo/preamp",
+    "summary": "Controls for each effect in the system audio equaliser's effect chain.",
+    "date": "2026-11-05",
+    "prs": [
+      { "title": "Set the controls of effects in the chain", "url": "https://github.com/bjarneo/preamp/pull/3" }
+    ]
+  },
+  {
+    "id": "systemd",
+    "repo": "systemd/systemd",
+    "summary": "A hardware database fix so closing the lid on an HP Pavilion Gaming 15 no longer toggles airplane mode.",
+    "date": "2026-10-18",
+    "prs": [
+      { "title": "hwdb: stop lid cycles toggling airplane mode on HP Pavilion Gaming 15-dk0xxx", "url": "https://github.com/systemd/systemd/pull/44266" }
+    ]
+  }
+]
