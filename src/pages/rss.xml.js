@@ -25,7 +25,7 @@ export async function GET(context) {
 
   return rss({
     title: 'ujo4eva',
-    description: 'Audio Engineering, Tech, Fitness, Culture',
+    description: 'Mixes, projects and writing from Osadebamwen Uwadiae.',
     site: context.site,
     // Hash links on mix items must not pick up a trailing slash
     // after the fragment (`#mix-1/` would miss id="mix-1").

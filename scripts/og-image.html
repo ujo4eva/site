@@ -1,0 +1,106 @@
+<!doctype html>
+<!--
+  Source for public/og.png, the link-preview image (1200×630).
+  Regenerate after editing, from the repo root:
+
+    brave --headless=new --hide-scrollbars --window-size=1200,630 \
+      --screenshot=public/og.png "file://$PWD/scripts/og-image.html"
+
+  Any Chromium-based browser works in place of brave.
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: 'Geist';
+        src: url('../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2') format('woff2');
+        font-weight: 100 900;
+      }
+      @font-face {
+        font-family: 'Geist Mono';
+        src: url('../node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2') format('woff2');
+        font-weight: 100 900;
+      }
+
+      html, body {
+        margin: 0;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: #09090b;
+      }
+
+      body {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 88px 96px;
+        font-family: 'Geist', sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .mark {
+        display: flex;
+        align-items: flex-end;
+        gap: 16px;
+        font-family: 'Geist Mono', monospace;
+        font-size: 30px;
+        color: #71717a;
+      }
+
+      /* The equaliser mark, frozen mid-bounce. */
+      .eq {
+        display: flex;
+        align-items: flex-end;
+        gap: 5px;
+        height: 26px;
+        padding-bottom: 5px;
+      }
+      .eq span {
+        width: 5px;
+        background: oklch(0.82 0.16 75);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 92px;
+        font-weight: 600;
+        letter-spacing: -0.035em;
+        line-height: 1;
+        color: #f4f4f5;
+      }
+
+      p {
+        margin: 24px 0 0;
+        font-size: 38px;
+        color: #a1a1aa;
+      }
+
+      .url {
+        font-family: 'Geist Mono', monospace;
+        font-size: 26px;
+        color: #52525b;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mark">
+      <div class="eq">
+        <span style="height: 55%"></span>
+        <span style="height: 100%"></span>
+        <span style="height: 35%"></span>
+        <span style="height: 75%"></span>
+      </div>
+      ujo4eva
+    </div>
+
+    <div>
+      <h1>Osadebamwen Uwadiae</h1>
+      <p>mixes music, cuts video, builds things. sometimes.</p>
+    </div>
+
+    <div class="url">ujo4eva.fyi</div>
+  </body>
+</html>

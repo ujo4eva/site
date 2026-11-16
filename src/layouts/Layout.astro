@@ -15,8 +15,8 @@ export interface Props {
 
 const {
 	title,
-	description = 'Osadebamwen Uwadiae — Audio Engineer, Tech, Fitness, Culture',
-	image = '/og-default.png',
+	description = 'Osadebamwen Uwadiae mixes music, cuts video and builds things. Sometimes.',
+	image = '/og.png',
 	chrome = true,
 } = Astro.props;
 
@@ -48,6 +48,9 @@ const imageUrl = new URL(image, Astro.site);
 		<meta property="og:description" content={description} />
 		<meta property="og:url" content={canonical} />
 		<meta property="og:image" content={imageUrl} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:alt" content="ujo4eva: Osadebamwen Uwadiae mixes music, cuts video, builds things." />
 		<meta property="og:site_name" content="ujo4eva" />
 
 		<meta name="twitter:card" content="summary_large_image" />
