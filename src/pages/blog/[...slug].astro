@@ -15,23 +15,23 @@ const { Content } = await render(post);
 ---
 
 <Layout title={`${post.data.title} — ujo4eva`} description={post.data.description}>
-  <main class="min-h-screen bg-zinc-950 text-white px-6 py-24">
-    <article class="max-w-2xl mx-auto">
-      <h1 class="text-4xl sm:text-5xl font-bold mb-3 pt-10 tracking-tight">
+  <article>
+    <header class="mb-12">
+      <time
+        datetime={post.data.date.toISOString()}
+        class="font-mono text-sm text-zinc-600 tabular-nums"
+      >
+        {post.data.date.toISOString().slice(0, 10)}
+      </time>
+      <h1 class="mt-2 text-3xl font-semibold tracking-tight text-zinc-100">
         {post.data.title}
       </h1>
+    </header>
 
-      <p class="text-zinc-500 mb-12">
-        {post.data.date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        })}
-      </p>
-
-      <div class="prose prose-invert prose-zinc max-w-none">
-        <Content />
-      </div>
-    </article>
-  </main>
+    <div
+      class="prose prose-invert prose-zinc max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-code:font-mono"
+    >
+      <Content />
+    </div>
+  </article>
 </Layout>

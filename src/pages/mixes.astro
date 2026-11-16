@@ -1,6 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Eq from '../components/Eq.astro';
 
 const mixes = await getCollection('mixes');
 
@@ -19,48 +21,435 @@ for (const mix of mixes) {
 const sorted = mixes.sort(
   (a, b) => a.data.order - b.data.order,
 );
+
+/**
+ * The page draws its own player UI and drives a hidden SoundCloud widget
+ * per track, so the widget itself should be as plain as possible.
+ * `embedUrl` in the content files stays the normal embed URL.
+ */
+function widgetUrl(embedUrl: string, visual: boolean): string {
+  const url = new URL(embedUrl);
+  url.searchParams.set('auto_play', 'false');
+  url.searchParams.set('visual', String(visual));
+  url.searchParams.set('show_comments', 'false');
+  url.searchParams.set('hide_related', 'true');
+  url.searchParams.set('color', '#e4a93a');
+  return url.toString();
+}
 ---
 
 <Layout title="Mixes — ujo4eva" description="Music mixes by Osadebamwen Uwadiae — the play button is the story.">
-  <main class="min-h-screen bg-zinc-950 text-white px-6 pt-24 pb-24">
-    <div class="max-w-4xl mx-auto">
-      <h1 class="text-4xl sm:text-5xl font-bold mb-2 tracking-tight">Mixes</h1>
-      <p class="text-zinc-500 mb-12">Songs I've mixed.</p>
+  <PageHeader title="mixes" blurb="songs i've mixed. press play." />
 
-      {sorted.length === 0 && (
-        <p class="text-zinc-500">No mixes yet. Check back soon.</p>
-      )}
+  {sorted.length === 0 && <p class="text-zinc-500">No mixes yet. Check back soon.</p>}
 
-      <div class="grid gap-8 sm:grid-cols-2">
-        {sorted.map((mix) => (
-          <div id={`mix-${mix.id}`} class="border border-zinc-800 rounded-2xl p-5 bg-zinc-900/40">
-            <h2 class="text-lg font-semibold text-white">
-              {mix.data.order}. {mix.data.title}
-            </h2>
-            <p class="text-zinc-400 text-sm mt-0.5 mb-4">
-              {mix.data.artist}
-              {mix.data.genre && <span class="text-zinc-600"> · {mix.data.genre}</span>}
-            </p>
+  <ol class="border-t border-zinc-900">
+    {
+      sorted.map((mix) => (
+        <li
+          id={`mix-${mix.id}`}
+          class="mix scroll-mt-8 border-b border-zinc-900 py-4"
+          data-mix
+          data-state="idle"
+          data-title={mix.data.title}
+          data-src={widgetUrl(mix.data.embedUrl, false)}
+        >
+          <button
+            type="button"
+            class="toggle grid w-full cursor-pointer grid-cols-[2.5rem_1fr_auto] items-baseline gap-x-4 text-left"
+            aria-label={`Play ${mix.data.title}`}
+          >
+            <span class="cell relative font-mono text-sm text-zinc-600">
+              <span class="idx">{String(mix.data.order).padStart(2, '0')}</span>
+              <span class="i-play text-accent">
+                <svg viewBox="0 0 10 10" class="inline size-2.5" fill="currentColor" aria-hidden="true">
+                  <path d="M1.5 0.5v9l8-4.5z" />
+                </svg>
+              </span>
+              <span class="i-pause text-accent">
+                <svg viewBox="0 0 10 10" class="inline size-2.5" fill="currentColor" aria-hidden="true">
+                  <path d="M1.5 0.5h2.5v9h-2.5zM6 0.5h2.5v9h-2.5z" />
+                </svg>
+              </span>
+              <span class="i-load text-accent">•</span>
+              <span class="i-eq text-accent"><Eq /></span>
+            </span>
 
+            <span class="min-w-0">
+              <span class="block truncate font-medium text-zinc-100">{mix.data.title}</span>
+              <span class="block truncate text-sm text-zinc-500">
+                {mix.data.artist}
+                {mix.data.genre && <span class="text-zinc-600"> · {mix.data.genre}</span>}
+              </span>
+            </span>
+
+            <span class="time font-mono text-sm text-zinc-600 tabular-nums" aria-live="off">–:––</span>
+          </button>
+
+          {
+            mix.data.description && (
+              <p class="mt-2 pl-14 text-sm leading-relaxed text-zinc-500">{mix.data.description}</p>
+            )
+          }
+
+          <div class="seek-wrap mt-3 pl-14">
+            <input
+              class="seek w-full"
+              type="range"
+              min="0"
+              max="1000"
+              step="1"
+              value="0"
+              aria-label={`Seek ${mix.data.title}`}
+              disabled
+            />
+          </div>
+
+          <noscript>
             <iframe
-              src={mix.data.embedUrl}
+              src={widgetUrl(mix.data.embedUrl, false)}
               title={mix.data.title}
               width="100%"
-              height="140"
+              height="166"
               scrolling="no"
               frameborder="no"
-              allow="autoplay"
-              class="rounded-lg"
+              allow="autoplay; encrypted-media"
+              class="mt-3"
             ></iframe>
-
-            {mix.data.description && (
-              <p class="text-zinc-500 text-sm mt-4 leading-relaxed">
-                {mix.data.description}
-              </p>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  </main>
+          </noscript>
+        </li>
+      ))
+    }
+  </ol>
 </Layout>
+
+<script is:inline id="sc-api" src="https://w.soundcloud.com/player/api.js"></script>
+
+<script>
+  // Minimal types for the bits of the SoundCloud Widget API used here.
+  // Reference: https://developers.soundcloud.com/docs/api/html5-widget
+  interface Widget {
+    bind(event: string, cb: (e?: { currentPosition: number; relativePosition: number }) => void): void;
+    play(): void;
+    pause(): void;
+    seekTo(ms: number): void;
+    getDuration(cb: (ms: number) => void): void;
+  }
+  interface SCApi {
+    Widget: ((iframe: HTMLIFrameElement) => Widget) & {
+      Events: Record<'READY' | 'PLAY' | 'PAUSE' | 'FINISH' | 'PLAY_PROGRESS' | 'ERROR', string>;
+    };
+  }
+  type State = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
+
+  interface Player {
+    row: HTMLElement;
+    title: string;
+    widget: Widget;
+    toggle: HTMLButtonElement;
+    time: HTMLElement;
+    seek: HTMLInputElement;
+    ready: boolean;
+    duration: number;
+    position: number;
+    seeking: boolean;
+    playWhenReady: boolean;
+    /** Set when another track takes over, so this one rewinds instead of showing as paused. */
+    stopping: boolean;
+  }
+
+  const READY_TIMEOUT_MS = 15_000;
+
+  function fmt(ms: number): string {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  }
+
+  function setState(p: Player, state: State) {
+    p.row.dataset.state = state;
+    const verb = state === 'playing' ? 'Pause' : 'Play';
+    p.toggle.setAttribute('aria-label', `${verb} ${p.title}`);
+    p.seek.disabled = !p.ready || state === 'idle' || state === 'error';
+    renderTime(p);
+  }
+
+  function renderTime(p: Player) {
+    const state = p.row.dataset.state as State;
+    if (state === 'error') p.time.textContent = 'n/a';
+    else if (!p.ready) p.time.textContent = '–:––';
+    else if (state === 'idle') p.time.textContent = fmt(p.duration);
+    else p.time.textContent = `${fmt(p.position)} / ${fmt(p.duration)}`;
+  }
+
+  function renderSeek(p: Player) {
+    const rel = p.duration ? p.position / p.duration : 0;
+    p.seek.value = String(Math.round(rel * 1000));
+    p.seek.style.setProperty('--p', `${rel * 100}%`);
+  }
+
+  function rewind(p: Player) {
+    p.position = 0;
+    p.widget.seekTo(0);
+    renderSeek(p);
+  }
+
+  function init(SC: SCApi) {
+    const players: Player[] = [];
+    const { Events } = SC.Widget;
+
+    const stopOthers = (current: Player) => {
+      for (const other of players) {
+        if (other === current) continue;
+        other.playWhenReady = false;
+        const state = other.row.dataset.state;
+        if (state === 'playing') {
+          other.stopping = true;
+          other.widget.pause();
+        } else if (state === 'paused' || state === 'loading') {
+          rewind(other);
+          setState(other, 'idle');
+        }
+      }
+    };
+
+    const start = (p: Player) => {
+      stopOthers(p);
+      if (p.ready) {
+        p.widget.play();
+      } else {
+        p.playWhenReady = true;
+        setState(p, 'loading');
+      }
+    };
+
+    for (const row of document.querySelectorAll<HTMLElement>('[data-mix]')) {
+      const iframe = document.createElement('iframe');
+      iframe.src = row.dataset.src!;
+      iframe.title = `${row.dataset.title} (audio)`;
+      iframe.allow = 'autoplay; encrypted-media';
+      iframe.tabIndex = -1;
+      iframe.setAttribute('aria-hidden', 'true');
+      // Keep it rendered (some browsers throttle display:none iframes) but off-screen.
+      Object.assign(iframe.style, {
+        position: 'fixed',
+        left: '-10000px',
+        top: '0',
+        width: '300px',
+        height: '166px',
+        border: '0',
+        pointerEvents: 'none',
+      });
+      document.body.append(iframe);
+
+      const p: Player = {
+        row,
+        title: row.dataset.title!,
+        widget: SC.Widget(iframe),
+        toggle: row.querySelector<HTMLButtonElement>('.toggle')!,
+        time: row.querySelector<HTMLElement>('.time')!,
+        seek: row.querySelector<HTMLInputElement>('.seek')!,
+        ready: false,
+        duration: 0,
+        position: 0,
+        seeking: false,
+        playWhenReady: false,
+        stopping: false,
+      };
+      players.push(p);
+
+      const timeout = setTimeout(() => {
+        if (!p.ready) setState(p, 'error');
+      }, READY_TIMEOUT_MS);
+
+      p.widget.bind(Events.READY, () => {
+        clearTimeout(timeout);
+        p.widget.getDuration((ms) => {
+          p.ready = true;
+          p.duration = ms;
+          if (p.playWhenReady) {
+            p.playWhenReady = false;
+            p.widget.play();
+          } else {
+            setState(p, p.row.dataset.state === 'error' ? 'idle' : (p.row.dataset.state as State));
+          }
+        });
+      });
+
+      p.widget.bind(Events.PLAY, () => {
+        stopOthers(p);
+        setState(p, 'playing');
+      });
+
+      p.widget.bind(Events.PAUSE, () => {
+        if (p.stopping) {
+          p.stopping = false;
+          rewind(p);
+          setState(p, 'idle');
+        } else if (p.row.dataset.state !== 'idle') {
+          setState(p, 'paused');
+        }
+      });
+
+      p.widget.bind(Events.FINISH, () => {
+        rewind(p);
+        setState(p, 'idle');
+        // Roll on to the next track, like a record.
+        const next = players[players.indexOf(p) + 1];
+        if (next) start(next);
+      });
+
+      p.widget.bind(Events.PLAY_PROGRESS, (e) => {
+        if (!e || p.seeking) return;
+        p.position = e.currentPosition;
+        renderSeek(p);
+        renderTime(p);
+      });
+
+      p.widget.bind(Events.ERROR, () => {
+        clearTimeout(timeout);
+        setState(p, 'error');
+      });
+
+      p.toggle.addEventListener('click', () => {
+        const state = p.row.dataset.state as State;
+        if (state === 'error') return;
+        if (state === 'playing') p.widget.pause();
+        else if (state === 'loading') {
+          p.playWhenReady = false;
+          setState(p, 'idle');
+        } else start(p);
+      });
+
+      p.seek.addEventListener('input', () => {
+        p.seeking = true;
+        p.position = (Number(p.seek.value) / 1000) * p.duration;
+        p.seek.style.setProperty('--p', `${Number(p.seek.value) / 10}%`);
+        renderTime(p);
+      });
+
+      p.seek.addEventListener('change', () => {
+        p.widget.seekTo(p.position);
+        p.seeking = false;
+      });
+    }
+  }
+
+  const api = document.getElementById('sc-api') as HTMLScriptElement | null;
+  const sc = (window as unknown as { SC?: SCApi }).SC;
+  if (sc) init(sc);
+  else api?.addEventListener('load', () => init((window as unknown as { SC: SCApi }).SC), { once: true });
+</script>
+
+<style>
+  /* Number cell: show exactly one of index / play / pause / loading / eq. */
+  .cell > span {
+    display: none;
+  }
+
+  [data-state='idle'] .idx,
+  [data-state='error'] .idx,
+  [data-state='loading'] .i-load,
+  [data-state='playing'] .i-eq,
+  [data-state='paused'] .i-play {
+    display: inline;
+  }
+
+  [data-state='idle'] .toggle:is(:hover, :focus-visible) .idx {
+    display: none;
+  }
+  [data-state='idle'] .toggle:is(:hover, :focus-visible) .i-play {
+    display: inline;
+  }
+
+  [data-state='playing'] .toggle:is(:hover, :focus-visible) .i-eq {
+    display: none;
+  }
+  [data-state='playing'] .toggle:is(:hover, :focus-visible) .i-pause {
+    display: inline;
+  }
+
+  [data-state='error'] .toggle {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .i-load {
+    animation: pulse 1s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    50% {
+      opacity: 0.3;
+    }
+  }
+
+  .toggle:focus-visible {
+    outline: none;
+  }
+  .toggle:focus-visible .cell {
+    outline: 1px solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  [data-state='playing'] .time,
+  [data-state='paused'] .time {
+    color: var(--color-zinc-300);
+  }
+
+  .mix:target .idx {
+    color: var(--color-accent);
+  }
+
+  /* Seek bar only shows for the active track. */
+  .seek-wrap {
+    display: none;
+  }
+  [data-state='playing'] .seek-wrap,
+  [data-state='paused'] .seek-wrap {
+    display: block;
+  }
+
+  .seek {
+    --p: 0%;
+    appearance: none;
+    height: 12px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .seek::-webkit-slider-runnable-track {
+    height: 2px;
+    background: linear-gradient(to right, var(--color-accent) var(--p), var(--color-zinc-800) var(--p));
+  }
+  .seek::-moz-range-track {
+    height: 2px;
+    background: linear-gradient(to right, var(--color-accent) var(--p), var(--color-zinc-800) var(--p));
+  }
+  .seek::-webkit-slider-thumb {
+    appearance: none;
+    width: 10px;
+    height: 10px;
+    margin-top: -4px;
+    border-radius: 9999px;
+    background: var(--color-accent);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .seek::-moz-range-thumb {
+    width: 10px;
+    height: 10px;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--color-accent);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .seek:is(:hover, :focus-visible)::-webkit-slider-thumb {
+    opacity: 1;
+  }
+  .seek:is(:hover, :focus-visible)::-moz-range-thumb {
+    opacity: 1;
+  }
+  .seek:focus-visible {
+    outline: none;
+  }
+</style>

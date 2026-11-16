@@ -1,17 +1,23 @@
 ---
+import '@fontsource-variable/geist';
+import '@fontsource-variable/geist-mono';
 import '../styles/global.css';
 import Nav from '../components/Nav.astro';
+import Socials from '../components/Socials.astro';
 
 export interface Props {
 	title: string;
 	description?: string;
 	image?: string;
+	/** Show the site header and footer. The homepage turns this off. */
+	chrome?: boolean;
 }
 
 const {
 	title,
 	description = 'Osadebamwen Uwadiae — Audio Engineer, Tech, Fitness, Culture',
 	image = '/og-default.png',
+	chrome = true,
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -23,6 +29,7 @@ const imageUrl = new URL(image, Astro.site);
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="theme-color" content="#09090b" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
@@ -48,16 +55,19 @@ const imageUrl = new URL(image, Astro.site);
 		<meta name="twitter:description" content={description} />
 		<meta name="twitter:image" content={imageUrl} />
 	</head>
-	<body>
-		<Nav />
-		<slot />
+	<body class="min-h-dvh bg-zinc-950 font-sans text-zinc-300 antialiased">
+		<div class="mx-auto flex min-h-dvh max-w-2xl flex-col px-6">
+			{chrome && <Nav />}
+			<main class:list={['flex-1', chrome && 'pb-24']}>
+				<slot />
+			</main>
+			{
+				chrome && (
+					<footer class="border-t border-zinc-900 py-8">
+						<Socials />
+					</footer>
+				)
+			}
+		</div>
 	</body>
 </html>
-
-<style>
-	html, body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
