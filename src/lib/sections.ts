@@ -21,9 +21,9 @@ export async function getSections(): Promise<Section[]> {
   ]);
 
   return [
-    { href: '/mixes', label: 'mixes', blurb: "songs i've mixed", count: mixes.length },
-    { href: '/videos', label: 'videos', blurb: "stuff i've cut and graded", count: videos.length },
-    { href: '/projects', label: 'projects', blurb: "things i've built", count: projects.length },
-    { href: '/blog', label: 'writing', blurb: 'notes, occasionally', count: posts.length },
+    { href: '/mixes/', label: 'mixes', blurb: "songs i've mixed", count: mixes.length },
+    { href: '/videos/', label: 'videos', blurb: "stuff i've cut and graded", count: videos.length },
+    { href: '/projects/', label: 'projects', blurb: "things i've built", count: projects.length },
+    { href: '/blog/', label: 'writing', blurb: 'notes, occasionally', count: posts.length },
   ].filter((section) => section.count > 0);
 }

@@ -26,3 +26,6 @@ pnpm-debug.log*
 # version control data
 .jj/
 .git/
+
+# wrangler local state
+.wrangler/

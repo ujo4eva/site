@@ -15,7 +15,8 @@ const sections = await getSections();
   <nav class="flex flex-wrap justify-end gap-x-4 gap-y-1 font-mono text-sm">
     {
       sections.map((section) => {
-        const active = pathname.startsWith(section.href);
+        // Match with or without the trailing slash (dev serves both).
+        const active = pathname.startsWith(section.href.replace(/\/$/, ''));
         return (
           <a
             href={section.href}
